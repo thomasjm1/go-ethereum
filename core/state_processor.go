@@ -67,6 +67,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
+	log.Error(fmt.Sprintf("[thomasjm] - state_processor Current Block # = %d", block.Number()))
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
@@ -126,7 +127,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
-	message := fmt.Sprintf("[thomasjm] - state_processor Current Block # = %s transaction = %s", bc.CurrentBlock(), tx.Hash())
+	message := fmt.Sprintf("[thomasjm] - state_processor Current Block # = %d transaction = %s", bc.CurrentBlock().NumberU64(), tx.Hash())
 	log.Error(message)
 	return receipt, gas, err
 }
