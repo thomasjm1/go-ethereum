@@ -127,7 +127,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
-	message := fmt.Sprintf("[thomasjm] - state_processor Current Block # = %d transaction = %s", bc.CurrentBlock().NumberU64(), tx.Hash())
+	message := fmt.Sprintf("[thomasjm] - state_processor Current Block # = %d transaction = %v", bc.CurrentBlock().NumberU64(), tx.Hash())
 	log.Error(message)
 	return receipt, gas, err
 }

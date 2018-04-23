@@ -42,7 +42,7 @@ type (
 
 // run runs the given contract and takes care of running precompiles with a fallback to the byte code interpreter.
 func run(evm *EVM, contract *Contract, input []byte) ([]byte, error) {
-	log.Error(fmt.Sprintf("[thomasjm] - evm running contract: %s", contract.CodeAddr))
+	log.Error(fmt.Sprintf("[thomasjm] - core.vm.evm.run running contract: %v", contract.CodeAddr))
 	if contract.CodeAddr != nil {
 		precompiles := PrecompiledContractsHomestead
 		if evm.ChainConfig().IsByzantium(evm.BlockNumber) {
@@ -143,7 +143,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	if evm.vmConfig.NoRecursion && evm.depth > 0 {
 		return nil, gas, nil
 	}
-	log.Error(fmt.Sprintf("[thomasjm] - evm calling contract @ %s", addr.Hash()))
+	log.Error(fmt.Sprintf("[thomasjm] - core.vm.evm.call calling contract @ %v", addr.Hash()))
 
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
