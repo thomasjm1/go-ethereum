@@ -57,7 +57,7 @@ func (d ProcessInfo) String() string {
 }
 
 func RecordResourcesToLog(prefix string) {
-	log.Error(fmt.Sprintf("[thomasjm] - Resource Usage @ %d due to %s", 123, prefix))
+	//log.Error(fmt.Sprintf("[thomasjm] - Resource usage due to %s", prefix))
 
 	var processes, _ = process.Processes()
 	for index, _ := range processes {

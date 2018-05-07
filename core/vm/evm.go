@@ -143,7 +143,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	if evm.vmConfig.NoRecursion && evm.depth > 0 {
 		return nil, gas, nil
 	}
-	log.Error(fmt.Sprintf("[thomasjm] - core.vm.evm.call calling contract @ %v", addr.Hash()))
+	//log.Error(fmt.Sprintf("[thomasjm] - core.vm.evm.call calling contract @ %v", addr.Hash()))
 
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
