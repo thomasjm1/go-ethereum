@@ -56,8 +56,8 @@ func (d ProcessInfo) String() string {
 	return string(s)
 }
 
-func record() {
-	log.Error(fmt.Sprintf("[thomasjm] - record resource usage @ %d", 123))
+func RecordResourcesToLog(prefix string) {
+	log.Error(fmt.Sprintf("[thomasjm] - Resource Usage @ %d due to %s", 123, prefix))
 
 	var processes, _ = process.Processes()
 	for index, _ := range processes {
@@ -107,8 +107,7 @@ func record() {
 				GuestNice: times.GuestNice,
 				Stolen: times.Stolen,
 			}
-			log.Error(fmt.Sprintf("[thomasjm] - perf: %s", processOuput))
-
+			log.Error(fmt.Sprintf("[thomasjm] - (%s) => %s", prefix, processOuput))
 		}
 	}
 }

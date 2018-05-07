@@ -26,7 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 	"fmt"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/resources"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -67,7 +67,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
-	log.Error(fmt.Sprintf("[thomasjm] - state_processor Current Block # = %d", block.Number()))
+	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.Process() Start block # = %d", block.Number()))
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
@@ -80,7 +80,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), receipts)
-
+	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.Process() Finish block # = %d", block.Number()))
 	return receipts, allLogs, *usedGas, nil
 }
 
@@ -91,7 +91,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
 
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
-
+	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Start tx hash = %s", tx.Hash()))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -127,7 +127,6 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
-	message := fmt.Sprintf("[thomasjm] - state_processor Current Block # = %d transaction = %v", bc.CurrentBlock().NumberU64(), tx.Hash())
-	log.Error(message)
+	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Finish tx hash = %s", tx.Hash()))
 	return receipt, gas, err
 }
