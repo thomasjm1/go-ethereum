@@ -27,6 +27,8 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"fmt"
 	"github.com/ethereum/go-ethereum/resources"
+	"time"
+	"strconv"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -91,7 +93,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
 
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
-	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Start tx hash = %s", tx.Hash().String()))
+	resourceProperties := make(map[string]string)
+	resourceProperties["transaction"] = tx.Hash().String()
+	resourceProperties["block"] = strconv.FormatInt(header.Number.Int64(), 10)
+	resourceProperties["timestamp"] = strconv.FormatInt(time.Now().UnixNano(), 10)
+	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Start tx hash = %s", tx.Hash().String()), resourceProperties)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -126,7 +132,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	// Set the receipt logs and create a bloom for filtering
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-
-	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Finish tx hash = %s", tx.Hash().String()))
+	resourceProperties["timestamp"] = strconv.FormatInt(time.Now().UnixNano(), 10)
+	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Finish tx hash = %s", tx.Hash().String()), resourceProperties)
 	return receipt, gas, err
 }

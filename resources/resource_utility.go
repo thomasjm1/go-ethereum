@@ -49,6 +49,8 @@ type ProcessInfo struct {
 	Guest     float64 `json:"guest"`
 	GuestNice float64 `json:"guestNice"`
 	Stolen    float64 `json:"stolen"`
+	//Added
+	Properties map[string]string `json:"properties"`
 }
 
 func (d ProcessInfo) String() string {
@@ -56,9 +58,8 @@ func (d ProcessInfo) String() string {
 	return string(s)
 }
 
-func RecordResourcesToLog(prefix string) {
+func RecordResourcesToLog(prefix string, properties map[string]string) {
 	//log.Error(fmt.Sprintf("[thomasjm] - Resource usage due to %s", prefix))
-
 	var processes, _ = process.Processes()
 	for index, _ := range processes {
 		processInfo := processes[index]
@@ -106,6 +107,7 @@ func RecordResourcesToLog(prefix string) {
 				Guest: times.Guest,
 				GuestNice: times.GuestNice,
 				Stolen: times.Stolen,
+				Properties:properties,
 			}
 			log.Error(fmt.Sprintf("[thomasjm] - (%s) => %s", prefix, processOuput))
 		}
