@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	//"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/cpu"
 )
 
 type ProcessInfo struct {
@@ -49,6 +50,19 @@ type ProcessInfo struct {
 	Guest     float64 `json:"guest"`
 	GuestNice float64 `json:"guestNice"`
 	Stolen    float64 `json:"stolen"`
+	//Total Times
+	TotalCPU       string  `json:"total_cpu"`
+	TotalUser      float64 `json:"total_user"`
+	TotalSystem    float64 `json:"total_system"`
+	TotalIdle      float64 `json:"total_idle"`
+	TotalNice      float64 `json:"total_nice"`
+	TotalIowait    float64 `json:"total_iowait"`
+	TotalIrq       float64 `json:"total_irq"`
+	TotalSoftirq   float64 `json:"total_softirq"`
+	TotalSteal     float64 `json:"total_steal"`
+	TotalGuest     float64 `json:"total_guest"`
+	TotalGuestNice float64 `json:"total_guestNice"`
+	TotalStolen    float64 `json:"total_stolen"`
 	//Added
 	Properties map[string]string `json:"properties"`
 }
@@ -61,7 +75,7 @@ func (d ProcessInfo) String() string {
 func RecordResourcesToLog(prefix string, properties map[string]string) {
 	//log.Error(fmt.Sprintf("[thomasjm] - Resource usage due to %s", prefix))
 	var processes, _ = process.Processes()
-	for index, _ := range processes {
+	for index := range processes {
 		processInfo := processes[index]
 		processName, _ := processInfo.Name()
 		if strings.Compare(processName, "geth") == 0 {
@@ -72,6 +86,35 @@ func RecordResourcesToLog(prefix string, properties map[string]string) {
 			netIoCounters, _ := processInfo.NetIOCounters(false)
 			netIoCounter := netIoCounters[0]
 			times, _ := processInfo.Times()
+			totalTimes, _ := cpu.Times(false)
+			summedTimes :=cpu.TimesStat{
+				CPU: "ALL",
+				User: 0,
+				System: 0,
+				Idle: 0,
+				Nice: 0,
+				Iowait: 0,
+				Irq: 0,
+				Softirq: 0,
+				Steal: 0,
+				Guest: 0,
+				GuestNice: 0,
+				Stolen: 0,
+			}
+			for totalTimeIndex := range totalTimes {
+				totalTime := totalTimes[totalTimeIndex]
+				summedTimes.User = summedTimes.User + totalTime.User
+				summedTimes.System = summedTimes.System + totalTime.System
+				summedTimes.Idle = summedTimes.Idle + totalTime.Idle
+				summedTimes.Nice = summedTimes.Nice + totalTime.Nice
+				summedTimes.Iowait = summedTimes.Iowait + totalTime.Iowait
+				summedTimes.Irq = summedTimes.Irq + totalTime.Irq
+				summedTimes.Softirq = summedTimes.Softirq + totalTime.Softirq
+				summedTimes.Steal = summedTimes.Steal + totalTime.Steal
+				summedTimes.Guest = summedTimes.Guest + totalTime.Guest
+				summedTimes.GuestNice = summedTimes.GuestNice + totalTime.GuestNice
+				summedTimes.Stolen = summedTimes.Stolen + totalTime.Stolen
+			}
 			processOuput := ProcessInfo{
 				CpuPercent: cpuPercent,
 				ReadCount: ioCounters.ReadCount,
@@ -107,6 +150,18 @@ func RecordResourcesToLog(prefix string, properties map[string]string) {
 				Guest: times.Guest,
 				GuestNice: times.GuestNice,
 				Stolen: times.Stolen,
+				TotalCPU: summedTimes.CPU,
+				TotalUser: summedTimes.User,
+				TotalSystem: summedTimes.System,
+				TotalIdle: summedTimes.Idle,
+				TotalNice: summedTimes.Nice,
+				TotalIowait: summedTimes.Iowait,
+				TotalIrq: summedTimes.Irq,
+				TotalSoftirq: summedTimes.Softirq,
+				TotalSteal: summedTimes.Steal,
+				TotalGuest: summedTimes.Guest,
+				TotalGuestNice: summedTimes.GuestNice,
+				TotalStolen: summedTimes.Stolen,
 				Properties:properties,
 			}
 			log.Error(fmt.Sprintf("[thomasjm] - (%s) => %s", prefix, processOuput))
