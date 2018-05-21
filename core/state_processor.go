@@ -95,6 +95,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	resourceProperties := make(map[string]string)
 	resourceProperties["transaction"] = tx.Hash().String()
+        resourceProperties["transaction_event"] = "start"
 	resourceProperties["block"] = strconv.FormatInt(header.Number.Int64(), 10)
 	resourceProperties["timestamp"] = strconv.FormatInt(time.Now().UnixNano(), 10)
 	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Start tx hash = %s", tx.Hash().String()), resourceProperties)
@@ -133,6 +134,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 	resourceProperties["timestamp"] = strconv.FormatInt(time.Now().UnixNano(), 10)
+        resourceProperties["transaction_event"] = "end"
 	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Finish tx hash = %s", tx.Hash().String()), resourceProperties)
 	return receipt, gas, err
 }
