@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	//"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/cpu"
 )
 
@@ -17,6 +17,12 @@ type ProcessInfo struct {
 	WriteCount uint64 `json:"writeCount"`
 	ReadBytes  uint64 `json:"readBytes"`
 	WriteBytes uint64 `json:"writeBytes"`
+
+        //Disk Usage
+	DiskTotal  uint64 `json:"diskTotal"`
+	DiskFree  uint64 `json:"diskFree"`
+	DiskUsed  uint64 `json:"diskUsed"`
+
 	//MemoryInfo
 	RSS    uint64 `json:"rss"`    // bytes
 	VMS    uint64 `json:"vms"`    // bytes
@@ -82,7 +88,17 @@ func RecordResourcesToLog(prefix string, properties map[string]string) {
 			cpuPercent, _ := processInfo.CPUPercent()
 			ioCounters, _ := processInfo.IOCounters()
 			memoryInfo, _ := processInfo.MemoryInfoEx()
-			//Combines all network interface stats if false, true then return individual network interfaces
+                        partitions, _ := disk.Partitions(false)
+                        diskTotal := uint64(0)
+                        diskUsed := uint64(0)
+                        diskFree := uint64(0)
+			for _, partition := range partitions {
+                        	usage, _ := disk.Usage(partition.Mountpoint)
+                                diskTotal = diskTotal + usage.Total
+                                diskUsed = diskUsed + usage.Used
+                                diskFree = diskFree + usage.Free
+                        }
+                        //Combines all network interface stats if false, true then return individual network interfaces
 			netIoCounters, _ := processInfo.NetIOCounters(false)
 			netIoCounter := netIoCounters[0]
 			times, _ := processInfo.Times()
@@ -121,6 +137,9 @@ func RecordResourcesToLog(prefix string, properties map[string]string) {
 				WriteCount: ioCounters.WriteCount,
 				ReadBytes: ioCounters.ReadBytes,
 				WriteBytes: ioCounters.WriteBytes,
+                                DiskTotal: uint64(diskTotal),
+                                DiskFree: uint64(diskFree),
+                                DiskUsed: uint64(diskUsed),
 				RSS: memoryInfo.RSS,
 				VMS: memoryInfo.VMS,
 				Shared: memoryInfo.Shared,
