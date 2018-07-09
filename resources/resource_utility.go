@@ -166,7 +166,7 @@ func RecordResourceToLogForProcess(processInfo *process.Process, prefix string, 
     log.Error(fmt.Sprintf("[thomasjm][profile] => calculation=%s", strconv.FormatInt(calculationTime, 10)))
 }
 
-func getGethProcess() *process.Process {
+func GetGethProcess() *process.Process {
 	var processes, _ = process.Processes()
 	for index := range processes {
 		processInfo := processes[index]
