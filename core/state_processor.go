@@ -26,6 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 	"fmt"
+	"github.com/shirou/gopsutil/process"
 	"github.com/ethereum/go-ethereum/resources"
 	"time"
 	"strconv"
@@ -69,11 +70,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
-	//resources.RecordResourcesToLog(fmt.Sprintf("state_processor.Process() Start block # = %d", block.Number()))
 	// Iterate over and process the individual transactions
+	gethProcess := resources.getGethProcess()
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
-		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg)
+		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg, gethProcess)
 		if err != nil {
 			return nil, nil, 0, err
 		}
@@ -82,7 +83,6 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), receipts)
-	//resources.RecordResourcesToLog(fmt.Sprintf("state_processor.Process() Finish block # = %d", block.Number()))
 	return receipts, allLogs, *usedGas, nil
 }
 
@@ -90,7 +90,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 // and uses the input parameters for its environment. It returns the receipt
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
-func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
+func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config, gethProcess Process) (*types.Receipt, uint64, error) {
 
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	resourceProperties := make(map[string]string)
@@ -98,7 +98,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
         resourceProperties["transaction_event"] = "start"
 	resourceProperties["block"] = strconv.FormatInt(header.Number.Int64(), 10)
 	resourceProperties["timestamp"] = strconv.FormatInt(time.Now().UnixNano(), 10)
-	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Start tx hash = %s", tx.Hash().String()), resourceProperties)
+	resources.RecordResourceToLogForProcess(gethProcess, fmt.Sprintf("state_processor.ApplyTransaction() Start tx hash = %s", tx.Hash().String()), resourceProperties)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -135,6 +135,6 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 	resourceProperties["timestamp"] = strconv.FormatInt(time.Now().UnixNano(), 10)
         resourceProperties["transaction_event"] = "end"
-	resources.RecordResourcesToLog(fmt.Sprintf("state_processor.ApplyTransaction() Finish tx hash = %s", tx.Hash().String()), resourceProperties)
+	resources.RecordResourceToLogForProcess(gethProcess, fmt.Sprintf("state_processor.ApplyTransaction() Finish tx hash = %s", tx.Hash().String()), resourceProperties)
 	return receipt, gas, err
 }
