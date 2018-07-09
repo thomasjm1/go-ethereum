@@ -8,6 +8,8 @@ import (
 	"strings"
 	//"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/cpu"
+        "time"
+        "strconv"
 )
 
 type ProcessInfo struct {
@@ -73,6 +75,7 @@ func (d ProcessInfo) String() string {
 }
 
 func RecordResourcesToLog(prefix string, properties map[string]string) {
+        startCalculation := time.Now().UnixNano()
 	//log.Error(fmt.Sprintf("[thomasjm] - Resource usage due to %s", prefix))
 	var processes, _ = process.Processes()
 	for index := range processes {
@@ -164,7 +167,14 @@ func RecordResourcesToLog(prefix string, properties map[string]string) {
 				TotalStolen: summedTimes.Stolen,
 				Properties:properties,
 			}
+                        endCalculation := time.Now().UnixNano()
+                        calculationTime := endCalculation - startCalculation
+                        startOutput := time.Now().UnixNano()
 			log.Error(fmt.Sprintf("[thomasjm] - (%s) => %s", prefix, processOuput))
+                        endOutput := time.Now().UnixNano()
+                        outputTime := endOutput - startOutput
+                        log.Error(fmt.Sprintf("[thomasjm][profile] => calculation=%s output=%s", strconv.FormatInt(calculationTime, 10), strconv.FormatInt(outputTime, 10)))
+                        break
 		}
 	}
 }
