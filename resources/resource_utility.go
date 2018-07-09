@@ -73,7 +73,7 @@ func (d ProcessInfo) String() string {
 	return string(s)
 }
 
-func RecordResourceToLogForProcess(processInfo Process, prefix string, properties map[string]string) {
+func RecordResourceToLogForProcess(processInfo *process.Process, prefix string, properties map[string]string) {
 	startCalculation := time.Now().UnixNano()
 	cpuPercent, _ := processInfo.CPUPercent()
 	ioCounters, _ := processInfo.IOCounters()
@@ -166,7 +166,7 @@ func RecordResourceToLogForProcess(processInfo Process, prefix string, propertie
     log.Error(fmt.Sprintf("[thomasjm][profile] => calculation=%s", strconv.FormatInt(calculationTime, 10)))
 }
 
-func getGethProcess() Process {
+func getGethProcess() *process.Process {
 	var processes, _ = process.Processes()
 	for index := range processes {
 		processInfo := processes[index]
@@ -175,7 +175,7 @@ func getGethProcess() Process {
 			return processInfo
 		}
 	}
-	return Process{
+	return &process.Process{
 		Pid: 0,
 	}
 }
