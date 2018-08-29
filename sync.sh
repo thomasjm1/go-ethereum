@@ -16,6 +16,6 @@ NOW=$(date +"%s")
 echo "Starting geth in $GETH_SYNC_MODE @ $DATA_DIRECTORY"
 
 
-nohup $GETH --syncmode="$GETH_SYNC_MODE" --cache=$CACHE_SIZE \
+nohup $GETH --syncmode="$GETH_SYNC_MODE" --gcmode=archive --cache=$CACHE_SIZE \
 --verbosity $LOGGING_VERBOSITY --datadir $DATA_DIRECTORY \
 --wsapi admin,db,debug,eth,net,txpool,web3 --rpcapi admin,db,debug,eth,net,txpool,web3 --rpc > $LOG_DIRECTORY/geth_$NOW.log 2>&1 &
